@@ -51,6 +51,35 @@ export const store = new Vuex.Store({
         },
         clearError (state) {
             state.error = null
+        },
+        setUpdateEdit (state, payload) {//mutating the new data to the stored state for display
+            const meetup = state.loadedMeetups.find(meetup => {
+                return meetup.id === payload.id//locating the same id that the data was updated from, to effect the changes
+            })
+            if (payload.title) {
+                meetup.title = payload.title
+            }
+            if (payload.description) {
+                meetup.description = payload.description
+            }
+            if (payload.date) {
+                meetup.date = payload.date.toISOString()
+            }
+        },
+        setRegisteredMeetup (state, payload) {
+            const id = payload.id // this gets the id of the payload passed from the actions
+            if (state.user.registeredMeetups.findIndex(meetup => meetup.id === id) >= 0) {
+                return
+            }
+            //push the id of the registered meetups into the state 
+            state.user.registeredMeetups.push(id)
+            state.user.fbkeys[id] = payload.fbKey
+        },
+        setUnregisteredMeetup (state, payload) {
+            const registeredMeetups = state.user.registeredMeetups
+            //now remove the id of the registered meetups
+            registeredMeetups.splice(registeredMeetups.findIndex(meetup => meetup.id === payload), 1)
+            Reflect.deleteProperty(state.user.fbkeys, payload)//to delete the registration id for the meetup store under fbkeys
         }
     },
     actions: {
@@ -65,6 +94,7 @@ export const store = new Vuex.Store({
                         id: key,
                         title: obj[key].title,
                         description: obj[key].description,
+                        imageUrl: obj[key].imageUrl,
                         date: obj[key].date,
                         Place: obj[key].Place,
                         creatorId: obj[key].creatorId
@@ -79,6 +109,36 @@ export const store = new Vuex.Store({
                     commit('setLoading', true)
                 }
             )
+        },
+        registerUserForMeetup ({commit, getters}, payload) {
+            commit('setLoading', true)
+            const user = getters.user
+            firebase.database().ref('/users/' + user.id).child('/registrations/').push(payload)
+            .then(data => {
+                commit('setLoading', false)
+                commit('setRegisteredMeetup', {id: payload, fbkey: data.key})
+            })
+            .catch(error => {
+                console.log(error)
+                commit('setLoading', false)
+            })
+        },
+        unregisterUserForMeetup ({commit, getters}, payload) {
+            commit('setLoading', true)
+            const user = getters.user
+            if (!user.fbkeys) {
+                return
+            }
+            const fbkey = user.fbkeys[payload]
+            firebase.database().ref('/users/' + user.id + '/registrations/').child(fbkey).remove()
+            .then(() => {
+                commit('setLoading', false)
+                commit('setUnregisteredMeetup', payload)
+            })
+            .catch((error) => {
+                console.log(error)
+                commit('setLoading', false)
+            })
         },
         //This is the action made to create a meetup, commiting the information passed by a user 
         createMeetup ({commit, getters}, payload) {
@@ -115,7 +175,7 @@ export const store = new Vuex.Store({
             })
             .then(() => {
                 commit('createMeetup',{
-                    ...meetup,//this is done to get a default id, saved to an object that will be committed
+                    ...meetup,//this is done to get a default id, saved to an object that is committed
                     imageUrl: imageUrl,//as gotten from firebase
                     id: key
                 })
@@ -125,6 +185,28 @@ export const store = new Vuex.Store({
             })
             //Reach out to Firebase and store it
             //when a new actions  is made it must be committed before it can finally work
+        },
+        updateMeetupData ({commit}, payload) {
+            commit('setLoading', true)//the loader will surely load when the information is passed as a payload
+            const updateObj = {}
+            if (payload.title) {
+                updateObj.title = payload.title
+            }
+            if (payload.description) {
+                updateObj.description = payload.description
+            }
+            if (payload.date) {
+                updateObj.date = payload.date
+            }
+            firebase.database().ref('meetupsData').child(payload.id).update(updateObj)
+            .then(() => {
+                commit('setLoading', false)
+                commit('setUpdateEdit', payload)
+            })
+            .catch(error => {
+                console.log(error)
+                commit('setLoading', false)
+            })
         },
         // this is the set of authetication process that makes uses of the .then() to pass promises, of either the fulfilling part of the error messages
         signUserUp ({commit}, payload) {
@@ -137,7 +219,8 @@ export const store = new Vuex.Store({
                     commit('setLoading', false)
                     const newUser = {
                         id: user.uid,
-                        registeredMeetups: []
+                        registeredMeetups: [],
+                        fbkeys: {}
                     }
                     commit('setUser', newUser)
                 }
@@ -161,7 +244,8 @@ export const store = new Vuex.Store({
                     commit('setLoading', false)
                     const newUser = {
                         id: user.uid,
-                        registeredMeetups: []
+                        registeredMeetups: [],
+                        fbkeys: {}
                     }
                     commit('setUser', newUser)
                 }
@@ -174,7 +258,35 @@ export const store = new Vuex.Store({
             )
         },
         autoSignIn ({commit}, payload) {
-            commit('setUser', {id: payload.uid, registeredMeetups: []})
+            commit('setUser', {
+                id: payload.uid, 
+                registeredMeetups: [],
+                fbkeys: {}
+            })
+        },
+        fetchUserState ({commit, getters}) {
+            commit('setLoading', true)
+            //this is used to fetch the users and user.id once in values
+            firebase.database().ref('/users/' + getters.user.id + '/registrations/').once('value')
+            .then(data => {
+                const dataPairs = data.val()
+                let registeredMeetups = []
+                let swappedPairs = {}//this is used to denote the fbkeys also the registration keys of a certain meetup
+                for (const key in dataPairs) {
+                    registeredMeetups.push(dataPairs[key])
+                    swappedPairs[dataPairs[key]] = key
+                }
+                const updateUser = {
+                    id: getters.user.id,
+                    registeredMeetups: registeredMeetups,
+                    fbkeys: swappedPairs
+                }
+                commit('setUser', updateUser)
+                commit('setLoading', false)
+            })
+            .catch(error => {
+                console.log(error)
+            })
         },
         logout ({commit}) {
             firebase.auth().signOut()
@@ -209,7 +321,7 @@ export const store = new Vuex.Store({
         loading (state) {
             return state.loading
         },
-        //this is a getter used to authentice a state and to check if the state of a user has been sent from the browser
+        //this is a getter used to authentice a state and to check if the state of a user has been authenticated through the browser
         isAuthenticated (state) {
             return state.user !== null && state.user !== undefined
         }

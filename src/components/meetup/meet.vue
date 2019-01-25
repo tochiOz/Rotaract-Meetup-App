@@ -40,7 +40,9 @@
                         <p>{{ meetup.description }}</p>
                     </v-card-text>
                     <v-card-actions justify-end>
-                        <app-reg :meetupId = "meetup.id"></app-reg>
+                        <app-reg 
+                        :meetupId = "meetup.id"
+                        v-if="isAuthenticated && userIsCreator"></app-reg>
                     </v-card-actions>    
                 </v-card>
             </v-flex>
@@ -70,9 +72,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-app-reg {
-    margin-left: 100px;
-}
-</style>

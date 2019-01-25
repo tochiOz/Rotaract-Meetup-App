@@ -4,7 +4,7 @@
             <v-btn class="error" slot="activator" color="primary">
                 {{ userIsRegistered ? 'Unregister' : 'Register'}}
             </v-btn>
-            <v-card class="text-md-center" style="width: 300px">
+            <v-card class="text-md-center" style="width: 500px">
                 <v-container>
                     <v-card-title v-if="userIsRegistered">
                         <span class="headline">Unregister From Meetup</span>
