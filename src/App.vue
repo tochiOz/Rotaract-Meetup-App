@@ -2,7 +2,7 @@
   <v-app>
     <v-toolbar dark color="primary darken-1">
       <v-toolbar-side-icon 
-        @click.native.stop="sideNav = !sideNav"
+        @click.stop="sideNav = !sideNav"
         class="hidden-md-and-up"
         >
         </v-toolbar-side-icon>
@@ -15,11 +15,20 @@
         flat 
         v-for="item in navItems" 
         :key="item.title"
-        router
         :to="item.link"
         >
           <v-icon left>{{ item.icon }}</v-icon>
           {{ item.title }}
+        </v-btn>
+      </v-toolbar-items>
+      <v-toolbar-items class="hidden-sm-and-down">
+        <v-btn 
+        flat 
+        v-if="isAuthenticated"
+        @click="onLogOut"
+        >
+          <v-icon left>exit_to_app</v-icon>
+          Logout
         </v-btn>
       </v-toolbar-items>
   </v-toolbar>
@@ -31,13 +40,20 @@
       <v-list-tile 
       v-for="item in navItems" 
       :key="item.title"
-      router
       :to="item.link"
       >
         <v-list-tile-action>
           <v-icon>{{ item.icon }}</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>{{ item.title }}</v-list-tile-content>
+      </v-list-tile>
+      <v-list-tile>
+        <v-list-tile-action 
+        v-if="isAuthenticated"
+        @click="onLogOut">
+          <v-icon>exit_to_app</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>Logout</v-list-tile-content>
       </v-list-tile>
     </v-list>
   </v-navigation-drawer>
@@ -61,8 +77,7 @@ export default {
       if (this.isAuthenticated) {
         return [
           { icon: 'supervisor_account', title: 'View MeetUps', link: '/meetup'},
-          { icon: 'room', title: 'Create MeetUps', link: '/meetup/new'},
-          { icon: 'person', title: 'Profile', link: '/profile'}
+          { icon: 'room', title: 'Create MeetUps', link: '/meetup/new'}
         ]
       }else {
         return [
@@ -73,6 +88,11 @@ export default {
     },
     isAuthenticated () {
     return this.$store.getters.isAuthenticated
+    }
+  },
+  methods: {
+    onLogOut () {
+      this.$store.dispatch('logout')
     }
   }
 }

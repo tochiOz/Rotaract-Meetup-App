@@ -17,22 +17,7 @@ export const store = new Vuex.Store({
                 Place: 'Lagos',
                 description: 'Join The 2nd Rotary Fundraiser'
             },
-            {
-                imageUrl: 'https://image.slidesharecdn.com/z4bphhsfof9ojustyhwr-signature-b77e2888de5d2c3fa549eb47ce56136ac767a2c046451f374ecf1e7b791061cf-poli-150330061218-conversion-gate01/95/rotary-public-image-547-aen-by-pdg-yasser-assem-33-638.jpg?cb=1427714117', 
-                id: 'rotaractImg2', 
-                title: 'Lisbon 2015', 
-                date: new Date(),
-                Place: 'Maimi',
-                description: 'Join The Lisbon Conference'
-            },
-            {
-                imageUrl: 'https://clubrunner.blob.core.windows.net/00000050055/Images/IMG_3626.JPG', 
-                id: 'rotaractImg3',
-                title: 'Be the Inspiration', 
-                date: new Date(),
-                Place: 'Uyo',
-                description: 'Join The Rotary & be the Inspiration'
-            },
+            
             {
                 imageUrl: 'http://rotaryeclubd9210harare.org/wp-content/uploads/2018/04/Rotaract-50.jpg', 
                 id: 'rotaractImg4', 
@@ -40,80 +25,163 @@ export const store = new Vuex.Store({
                 date: new Date(),
                 Place: 'Afaha-Uqua',
                 description: 'Happy Birthday Rotary'
-            },
-            {
-                imageUrl: 'https://a.wayin.com/images/5157/ce541b56-14ef-468b-b177-8e954edb57f8/d2_8.jpg', 
-                id: 'rotaractImg5', 
-                title: 'Rotaract Conference', 
-                date: new Date(),
-                Place: 'Jacob',
-                description: 'Join The 2nd Rotary Conference'
             }
         ],
-        user: null   
+        user: null,
+        error: null,
+        loading: false
     },
     mutations: {//mutations store changes made to the state of the informations stored in it
         //added information from the create-meetup page
+        setLoadedeMeetup (state, payload) {//this are useds to set the store to the payload which will be cmmitted with the data into firebase in the actions tab
+            state.loadedMeetups = payload
+        },
         createMeetup (state, payload) {
             state.loadedMeetups.push(payload)
         },
         //information gotten as the user profile, it sends the user info as payload into the user folder of the state
         setUser (state, payload) {
-            return state.user = payload
+            state.user = payload
+        },
+        setError (state, payload) {
+            state.error = payload
+        },
+        setLoading (state, payload) {
+            state.loading = payload
+        },
+        clearError (state) {
+            state.error = null
         }
     },
     actions: {
+        loadMeetups ({commit}) {
+            commit('setLoading', true)
+            firebase.database().ref('meetupsData').once('value')
+            .then((data) => {
+               const meetups = [] //creating an array where the  stored data will be iterated into
+               const obj = data.val()//this stores the objects value in a variable
+               for (const key in obj) {
+                   meetups.push({//used to push each object value to the empty array
+                        id: key,
+                        title: obj[key].title,
+                        description: obj[key].description,
+                        date: obj[key].date,
+                        Place: obj[key].Place,
+                        creatorId: obj[key].creatorId
+                   })
+               }
+               commit('setLoadedeMeetup', meetups)
+               commit('setLoading', false)
+            })
+            .catch(
+                (error) => {
+                    console.log(error)
+                    commit('setLoading', true)
+                }
+            )
+        },
         //This is the action made to create a meetup, commiting the information passed by a user 
-        createMeetup ({commit}, payload) {
+        createMeetup ({commit, getters}, payload) {
             const meetup = {
                 title: payload.title,
                 Place: payload.Place,
-                imageUrl: payload.imageUrl,
-                description: payload.decription,
-                date: payload.date
+                description: payload.description,
+                date: payload.date.toISOString(),//it helps to convert the date to astring which can be stored
+                creatorId: getters.user.id
             }
+            //Before commiting the retrieved data from your payload, send it to firebase setup is neccesary
+            //remember actions is the place whee you do ayschronous tasks
+            let imageUrl
+            let key
+            firebase.database().ref('meetupsData').push(meetup)//select nodes where the data will be stored
+            .then((data) => {//without a key its difficult to view the data stored in the firebase
+                key = data.key
+                return key
+            })
+            .then(key => {// to store the image id using the key into firebase
+                const filename = payload.image.name
+                const ext = filename.slice(filename.lastIndexOf('.'))
+                let uploadTask = firebase.storage().ref('meetups/' + key + '.' + ext).put(payload.image)
+                return uploadTask
+            })
+            .then ( uploadTask => {
+                uploadTask.ref.getDownloadURL().then(function(downloadURL) {
+                    console.log(downloadURL)
+                    imageUrl = downloadURL
+                    return firebase.database().ref('meetupsData').child(key).update(
+                        { imageUrl: imageUrl
+                    })
+                })
+            })
+            .then(() => {
+                commit('createMeetup',{
+                    ...meetup,//this is done to get a default id, saved to an object that will be committed
+                    imageUrl: imageUrl,//as gotten from firebase
+                    id: key
+                })
+            })
+            .catch((error) => {
+                console.log(error)
+            })
             //Reach out to Firebase and store it
-            commit('createMeetup', meetup)
             //when a new actions  is made it must be committed before it can finally work
         },
         // this is the set of authetication process that makes uses of the .then() to pass promises, of either the fulfilling part of the error messages
         signUserUp ({commit}, payload) {
+            commit('setLoading', true)//this is done cause the user info is loading into the firebase for authentication
+            commit('clearError')
             firebase.auth().createUserWithEmailAndPassword(payload.email, payload.password)
             //sending the promise catcher for the the 2 possible arguements
             .then(//when the promise is accepted
                 user => {//this registers the new set of users and their id
+                    commit('setLoading', false)
                     const newUser = {
                         id: user.uid,
-                        registeredMeetup: []
+                        registeredMeetups: []
                     }
                     commit('setUser', newUser)
                 }
             )
             .catch(//this is used when the promise is rejected
                 error => {
+                    commit('setLoading', false)//it can't be loading when there is an ERROR!!!!
+                    commit('setError', error.message)
                     console.log(error)
-                    
                 } 
             )
         },
         // every sign up commit must have a sign in commit in the actions state and must be dispatched in thier respective pages
         signUserIn ({commit}, payload) {
+            commit('setLoading', true)//this is done cause the user info is loading into the firebase for authentication
+            commit('clearError')
             firebase.auth().signInWithEmailAndPassword(payload.email, payload.password)
             //sending the promise catcher for the the 2 possible arguements
             .then(//when the promise is accepted
                 user => {//this registers the new set of users and their id
+                    commit('setLoading', false)
                     const newUser = {
                         id: user.uid,
-                        registeredMeetup: []
+                        registeredMeetups: []
                     }
                     commit('setUser', newUser)
                 }
             )
             .catch(//this is used when the promise is rejected
                 error => {
-                    console.log(error)
+                    commit('setLoading', false)//it can't be loading when there is an ERROR!!!!
+                    commit('setError', error.message)
                 } 
             )
+        },
+        autoSignIn ({commit}, payload) {
+            commit('setUser', {id: payload.uid, registeredMeetups: []})
+        },
+        logout ({commit}) {
+            firebase.auth().signOut()
+            commit('setUser', null)    
+        },
+        clearError ({commit}) {
+            commit('clearError')
         }
     },
     getters: {//this acts as a route to direct the state to as many components as possible
@@ -134,6 +202,12 @@ export const store = new Vuex.Store({
         },
         user (state) {
             return state.user
+        },
+        error (state) {
+            return state.error
+        },
+        loading (state) {
+            return state.loading
         },
         //this is a getter used to authentice a state and to check if the state of a user has been sent from the browser
         isAuthenticated (state) {

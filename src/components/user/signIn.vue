@@ -1,5 +1,10 @@
 <template>
     <v-container>
+        <v-layout row v-if="error">
+            <v-flex offset-sm3 sm6 xs12>
+                <app @dismissed="onDismissed" :text="error"></app>
+            </v-flex>
+        </v-layout>
         <v-layout mt-20 row>
             <v-flex offset-sm3 sm6 xs12>
                 <v-card>
@@ -34,7 +39,18 @@
                                 </v-layout>
                                 <v-layout row>
                                     <v-flex xs12 sm6>
-                                        <v-btn type="submit" class="error" v-model="onSignIn">Sign In</v-btn>
+                                        <v-btn 
+                                        type="submit" 
+                                        class="info" 
+                                        v-model="onSignIn"
+                                        :loading="loading"
+                                        :disabled="loading"
+                                        >
+                                        Sign In
+                                        <span slot="loader" class="custom-loader">
+                                            <v-icon light>cached</v-icon>
+                                        </span>
+                                        </v-btn>
                                     </v-flex>
                                 </v-layout> 
                             </form>
@@ -47,6 +63,7 @@
 </template> 
 
 <script>
+import app from "@/components/shared/alert"
 export default {
     data () {
         return {
@@ -57,6 +74,12 @@ export default {
     computed: {
         user () {
             return this.$store.getters.user
+        },
+        loading () {
+            return this.$store.getters.loading
+        },
+        error () {
+            return this.$store.getters.error
         }
     },
     watch: {//this is a vue directive used to watch the change of state of a set of values acquired from th ecomputed property
@@ -70,7 +93,54 @@ export default {
         onSignIn () {
             //dispatch the store.actions function with the information to be passed to the form within the form's page 
             this.$store.dispatch('signUserIn', {email: this.email, password: this.password})
+        },
+        onDismissed () {
+            this.$store.dispatch('clearError')
         }
+    },
+    components: {
+        app
     }
 }
 </script>
+
+<style scoped>
+.custom-loader {
+    animation: loader 1s infinite;
+    display: flex;
+  }
+  @-moz-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @-webkit-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @-o-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+</style>
+

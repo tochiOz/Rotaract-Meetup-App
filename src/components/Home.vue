@@ -1,6 +1,21 @@
 <template>
     <v-container fluid>
-        <v-layout row wrap>
+        <v-layout>
+            <v-flex xs12 class="text-xs-center">
+                <v-progress-circular
+                    :size="70"
+                    :width="7"
+                    color="amber"
+                    indeterminate
+                    v-if="loading"
+                ></v-progress-circular>
+            </v-flex>
+        </v-layout>
+        <v-layout 
+            row 
+            wrap  
+            v-if="!loading"
+            class="carousel-push">
             <v-flex xs12>
                 <v-carousel align-center style="cursor: pointer;">
                     <v-carousel-item
@@ -22,7 +37,7 @@
                 <v-card>
                     <v-card-title primary-title>
                         <div  class="attach">
-                            <h2>THIS ARE THE ATTACHED MEETUPS</h2>
+                            <h3>THIS ARE THE ATTACHED MEETUPS</h3>
                         </div>
                     </v-card-title>
                 </v-card>
@@ -44,6 +59,9 @@ export default {
     computed: {
         meetups () {
             return this.$store.getters.featuredMeetups
+        },
+        loading () {
+            return this.$store.getters.loading
         }
     },
     methods: {
@@ -55,6 +73,8 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
     .slide-title{
         text-align: center;
         background-color: rgba(0, 0, 0, 0.5);
@@ -71,5 +91,9 @@ export default {
         font-size: 1.5em;
         font-family: 'Times New Roman', Times, serif;
         font-weight: bold;
+    }
+
+    .carousel-push {
+        margin: 0;                                                                                                                                                                                                                                                                                                                                                                                                                  
     }
 </style>

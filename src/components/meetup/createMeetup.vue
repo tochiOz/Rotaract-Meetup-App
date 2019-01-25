@@ -92,13 +92,14 @@
                     </v-layout>
                     <v-layout row>
                         <v-flex xs12 sm6 offset-sm3>
-                           <v-text-field
-                           name="imageUrl"
-                           label="Image URL"
-                           id="image-url"
-                           v-model="imageUrl"
-                           required
-                           ></v-text-field>
+                          <v-btn raised class="primary" @click="onPickFile">Upload Image</v-btn>
+                          <input 
+                          type="file" 
+                          style="display: none" 
+                          ref="inputtedFile" 
+                          accept="image/*"
+                          @change="onFilePicked">
+                          <!-- the (ref) is used to reference the element to any item in the DOM -->
                         </v-flex>
                     </v-layout>
                     <v-layout row>
@@ -118,18 +119,6 @@
                            ></v-text-field>
                         </v-flex>
                     </v-layout>
-                    <!-- <v-layout row mb-3>
-                        <v-flex xs12 sm6 offset-sm3>
-                           <v-date-picker v-model="date"></v-date-picker>
-                           <p>{{ date }}</p>
-                        </v-flex>
-                    </v-layout> -->
-                    <!-- <v-layout row>
-                        <v-flex xs12 sm6 offset-sm3>
-                           <v-time-picker v-model="time" format="24hr"></v-time-picker>
-                           <p>{{ time }}</p>
-                        </v-flex>
-                    </v-layout> -->
                     <v-layout row>
                         <v-flex xs12 sm6 offset-sm3>
                             <v-btn type="submit" class="primary" :disabled="!formIsValid">Create Meetup</v-btn>
@@ -154,7 +143,8 @@ export default {
             modal: false,
             menu2: false,
             modal2: '',
-            time: ''
+            time: '',
+            image: null
         }
     },
     computed: {//this means that the below will be executed autmatically as the page loads
@@ -184,15 +174,36 @@ export default {
             if (!this.formIsValid) {
                 return
             }
+            if (!this.image) {
+                return 
+            }
             const meetupData = {
                 title: this.title,
                 Place: this.Place,
-                imageUrl: this.imageUrl,
+                image: this.image,
                 description: this.description,
                 date: this.loadedDateTime
             }
             this.$store.dispatch('createMeetup', meetupData)//you dispatch changes made on the state within the mutations and actions bracket
             return this.$router.push('/meetup')
+        },
+        onPickFile () {
+            this.$refs.inputtedFile.click()
+        },
+        onFilePicked (event) {
+            //when the file is picked what happens next
+            const files = event.target.files//used to target all uploaded files
+            let filename = files[0].name//used to select a single file in the files array
+            if (filename.lastIndexOf('.') <= 0) {
+                return alert('Please add a valid file!')
+            }
+            //turning file into a base 64 string file, ie a string value
+            const fileReader = new FileReader()//which is actually a function that converts file to string
+            fileReader.addEventListener('load', () => {
+                this.imageUrl = fileReader.result
+            })
+            fileReader.readAsDataURL(files[0])
+            this.image = files[0]
         }
     }
 }

@@ -1,8 +1,8 @@
 {
-  "name": "intro",
+  "name": "Rotaract-Meetup-App",
   "version": "1.0.0",
-  "description": "A Vue.js project",
-  "author": "",
+  "description": "A Vue.js project including Firebase",
+  "author": "Tochi-Oz",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
