@@ -1,7 +1,7 @@
 <template>
     <v-layout row justify-end wrap>
         <v-dialog v-model="dialog" persistent max-width="600px">
-            <v-btn slot="activator" fab accent large dark color="primary"></v-btn>
+            <v-btn slot="activator" large dark color="primary">Edit</v-btn>
             <v-icon>edit</v-icon>
             <v-card>
                 <v-card-title>

@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid>
+    <v-container fluid style="width: 100%">
         <v-layout>
             <v-flex xs12 class="text-xs-center">
                 <v-progress-circular
@@ -24,7 +24,8 @@
                     :key="meetup.id"
                     @click="onLoadMeetup(meetup.id)"
                     reverse-transition="fade"
-                    transition="fade">
+                    transition="fade"
+                    style="height: 600px">
                     <div class="slide-title">
                         {{ meetup.title }}
                     </div>
@@ -88,12 +89,12 @@ export default {
     .attach {
         margin: auto;
         text-align: center;
-        font-size: 1.5em;
+        font-size: 1.2em;
         font-family: 'Times New Roman', Times, serif;
         font-weight: bold;
     }
 
     .carousel-push {
-        margin: 0;                                                                                                                                                                                                                                                                                                                                                                                                                  
+        width: 100%;                                                                                                                                                                                                                                                                                                                                                                                                                
     }
 </style>

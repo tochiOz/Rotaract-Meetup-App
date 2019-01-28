@@ -1,6 +1,6 @@
 <template>
-    <v-layout row justify-center wrap>
-        <v-dialog v-model="dialog" persistent max-width="400px">
+    <v-layout row wrap>
+        <v-dialog v-model="dialog" persistent max-width="350px">
             <v-btn slot="activator" color="primary">Edit Time</v-btn>
             <v-card>
                 <v-container>
@@ -37,8 +37,8 @@
             editTime: null //because no date selected yet
         } 
     },
-    created () {
-        this.editTime = new Date(this.meetup.date).toISOString().substr(0, 10)// TO showcase the current date base on the meetup id
+    mounted () {
+        this.editTime = new Date(this.meetup.date)// TO showcase the current date base on the meetup id
     },
     methods: {
         onSaveTime () {//this recieves the newdate, set them in utc format and disptaches to the firebase

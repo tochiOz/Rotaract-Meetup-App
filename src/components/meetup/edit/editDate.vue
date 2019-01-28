@@ -1,5 +1,5 @@
 <template>
-    <v-layout row justify-center wrap>
+    <v-layout row wrap>
         <v-dialog v-model="dialog" persistent max-width="350px">
             <v-btn slot="activator" color="primary">Edit Date</v-btn>
             <v-card>
@@ -13,6 +13,7 @@
                             <v-date-picker 
                             v-model="editDate" 
                             style="width: 100%"
+                            reactive
                             actions>
                                 <template slot-scope="{save, cancel}">
                                     <v-btn flat color="red darken-1" flat @click.native="dialog = false">Close</v-btn>
@@ -33,11 +34,12 @@
     data () {
         return {
             dialog: false,
-            editDate: null //because no date selected yet
+            editDate: null, //because no date selected yet
         } 
     },
-    created () {
-        this.editDate = new Date(this.meetup.date)// TO showcase/an immediate display of the current date base on the meetup id
+    mounted () {
+        this.editDate = new Date(this.meetup.date).toISOString().substr(0, 10);// TO showcase/an immediate display of the current date base on the meetup id
+        
     },
     methods: {
         onSaveDate () {//this recieves the newdate, set them in utc format and disptaches to the firebase
@@ -60,7 +62,3 @@
     } 
   }
 </script>
-
-<style scoped>
-
-</style> 

@@ -1,5 +1,5 @@
 <template>
-    <v-layout row justify-space-around wrap>
+    <v-layout row justify-center wrap>
         <v-dialog v-model="dialog" persistent style="width: 300px" class="align-center">
             <v-btn class="error" slot="activator" color="primary">
                 {{ userIsRegistered ? 'Unregister' : 'Register'}}

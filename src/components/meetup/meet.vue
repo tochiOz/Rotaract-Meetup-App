@@ -1,6 +1,6 @@
 <template>
     <v-container fluid>
-        <v-layout row wrap  v-if="loading">
+        <v-layout row wrap v-if="loading">
             <v-flex xs12 class="text-xs-center">
                 <v-progress-circular
                     :size="70"
@@ -26,8 +26,9 @@
                     height="400px"
                     ></v-card-media>
                     <v-card-text>
-                        <div class="text--primary">{{ meetup.date | date }}  --  {{ meetup.Place }}</div>
-                        <!-- <div>
+                        <div class="text--primary" style="font-size: 20px">{{ meetup.date | date }}  --  {{ meetup.Place }}</div>
+                        <p class="view">{{ meetup.description }}</p>
+                        <div class="app-align">
                             <app-date 
                             :meetup="meetup"
                             v-if="userIsCreator">
@@ -36,10 +37,9 @@
                             :meetup="meetup"
                             v-if="userIsCreator">
                             </app-time> 
-                        </div> -->
-                        <p>{{ meetup.description }}</p>
+                        </div> 
                     </v-card-text>
-                    <v-card-actions justify-end>
+                    <v-card-actions flex-end>
                         <app-reg 
                         :meetupId = "meetup.id"
                         v-if="isAuthenticated && userIsCreator"></app-reg>
@@ -72,3 +72,15 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+    .view {
+        font-size: 18px;
+    }
+    .app-align {
+        display: inline
+    }
+    p {
+        margin: 0px;
+    }
+</style>
