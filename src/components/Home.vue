@@ -22,6 +22,7 @@
                     v-for="meetup in meetups"
                     :src="meetup.imageUrl"
                     :key="meetup.id"
+                    :perPage=1
                     @click="onLoadMeetup(meetup.id)"
                     reverse-transition="fade"
                     transition="fade"
