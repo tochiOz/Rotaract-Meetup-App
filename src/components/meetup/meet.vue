@@ -28,16 +28,20 @@
                     <v-card-text>
                         <div class="text--primary" style="font-size: 20px">{{ meetup.date | date }}  --  {{ meetup.Place }}</div>
                         <p class="view">{{ meetup.description }}</p>
-                        <div class="app-align">
-                            <app-date 
-                            :meetup="meetup"
-                            v-if="userIsCreator">
-                            </app-date>
-                            <app-time 
-                            :meetup="meetup"
-                            v-if="userIsCreator">
-                            </app-time> 
-                        </div> 
+                        <v-layout class="app-align" grid-list-sm >
+                            <v-flex xs12 sm6>
+                                <app-date 
+                                :meetup="meetup"
+                                v-if="userIsCreator">
+                                </app-date>
+                            </v-flex>
+                            <v-flex xs12 sm6>
+                                <app-time 
+                                :meetup="meetup"
+                                v-if="userIsCreator">
+                                </app-time> 
+                            </v-flex>                        
+                        </v-layout> 
                     </v-card-text>
                     <v-card-actions flex-end>
                         <app-reg 
