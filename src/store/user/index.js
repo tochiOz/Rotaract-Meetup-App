@@ -40,6 +40,7 @@ export default {
                 commit('setLoading', false)
             })
         },
+         
         unregisterUserForMeetup ({commit, getters}, payload) {
             commit('setLoading', true)
             const user = getters.user
